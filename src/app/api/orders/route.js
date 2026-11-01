@@ -10,20 +10,20 @@ export async function POST(request) {
   try {
     await dbConnect();
     const body = await request.json();
-    const { productId, productName, size, price, customerName, customerEmail, shippingAddress, message } = body;
+    const { orderId, productId, productName, size, price, customerName, orderVia, shippingAddress, message } = body;
 
-    if (!productId || !customerName || !customerEmail || !shippingAddress) {
+    if (!productId || !customerName || !orderVia || !shippingAddress) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
 
     const order = await Order.create({
-      orderId: `ORD-${Date.now()}`,
+      orderId: typeof orderId === "string" && orderId ? orderId : `ORD-${Date.now()}`,
       productId,
       productName,
       size,
       price,
       customerName,
-      customerEmail,
+      orderVia,
       shippingAddress,
       message: message || "",
       status: "pending",

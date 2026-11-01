@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import { FiMessageCircle, FiMail, FiX } from "react-icons/fi";
+import { FiMessageCircle, FiX } from "react-icons/fi";
 import { FaTelegramPlane, FaWhatsapp } from "react-icons/fa";
 
 const links = [
@@ -17,13 +17,6 @@ const links = [
     icon: <FaTelegramPlane className="w-5 h-5" />,
     bg: "bg-[#0088cc]",
     hover: "hover:bg-[#0077b5]",
-  },
-  {
-    label: "Email",
-    href: "mailto:orders@buyetomidateproducts.com",
-    icon: <FiMail className="w-5 h-5" />,
-    bg: "bg-[#10b981]",
-    hover: "hover:bg-[#059669]",
   },
 ];
 

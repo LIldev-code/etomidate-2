@@ -47,7 +47,7 @@ export async function sendContactNotification({ name, email, subject, message })
 }
 
 export async function sendOrderNotification(order) {
-  const { orderId, productName, size, price, customerName, customerEmail, shippingAddress, message } = order;
+  const { orderId, productName, size, price, customerName, orderVia, shippingAddress, message } = order;
 
   const html = `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #0a0a0a; color: #fff; border-radius: 12px; overflow: hidden;">
@@ -71,8 +71,8 @@ export async function sendOrderNotification(order) {
         <p style="color: #10b981; font-size: 14px; font-weight: bold; margin-bottom: 5px;">Customer</p>
         <p style="color: #ccc; margin-top: 0;">${customerName}</p>
 
-        <p style="color: #10b981; font-size: 14px; font-weight: bold; margin-bottom: 5px;">Email</p>
-        <p style="color: #ccc; margin-top: 0;">${customerEmail}</p>
+        <p style="color: #10b981; font-size: 14px; font-weight: bold; margin-bottom: 5px;">Ordered Via</p>
+        <p style="color: #ccc; margin-top: 0;">${orderVia === "whatsapp" ? "WhatsApp" : orderVia === "telegram" ? "Telegram" : orderVia || "—"}</p>
 
         <p style="color: #10b981; font-size: 14px; font-weight: bold; margin-bottom: 5px;">Shipping Address</p>
         <p style="color: #ccc; margin-top: 0;">${shippingAddress}</p>

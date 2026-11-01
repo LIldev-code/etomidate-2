@@ -4,14 +4,17 @@ import Link from "next/link";
 import { useParams, useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
 import toast from "react-hot-toast";
-import { FaFlask, FaVial, FaTint } from "react-icons/fa";
-import { FiCheckCircle, FiUser, FiMail, FiMapPin, FiMessageSquare, FiShoppingBag, FiChevronRight, FiLoader, FiArrowLeft } from "react-icons/fi";
+import { FaFlask, FaVial, FaTint, FaWhatsapp, FaTelegramPlane } from "react-icons/fa";
+import { FiCheckCircle, FiUser, FiMapPin, FiMessageSquare, FiShoppingBag, FiChevronRight, FiLoader, FiArrowLeft } from "react-icons/fi";
 
 const categoryIcons = {
   powder: <FaFlask className="w-10 h-10 text-[#10b981]" />,
   vape: <FaVial className="w-10 h-10 text-[#10b981]" />,
   liquid: <FaTint className="w-10 h-10 text-[#10b981]" />,
 };
+
+const WHATSAPP_NUMBER = "5125922145";
+const TELEGRAM_USERNAME = "biggestsup";
 
 export default function OrderPage() {
   const { slug } = useParams();
@@ -21,7 +24,8 @@ export default function OrderPage() {
   const [selectedSize, setSelectedSize] = useState(0);
   const [orderPlaced, setOrderPlaced] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const [form, setForm] = useState({ name: "", email: "", address: "", message: "" });
+  const [orderVia, setOrderVia] = useState("whatsapp");
+  const [form, setForm] = useState({ name: "", address: "", message: "" });
 
   useEffect(() => {
     fetch("/api/products")
@@ -58,20 +62,48 @@ export default function OrderPage() {
     );
   }
 
+  const currentPrice = product.sizes?.[selectedSize]?.price || product.price || 0;
+
   const handleOrder = async (e) => {
     e.preventDefault();
     setSubmitting(true);
+
+    const orderId = `ORD-${Date.now()}`;
+    const orderText = [
+      "Hello! I'd like to place an order.",
+      `Order ID: ${orderId}`,
+      `Product: ${product.name} (${product.sizes?.[selectedSize]?.label || "Standard"})`,
+      `Price: €${currentPrice.toFixed(2)}`,
+      `Name: ${form.name}`,
+      `Shipping Address: ${form.address}`,
+      form.message ? `Note: ${form.message}` : null,
+    ]
+      .filter(Boolean)
+      .join("\n");
+
+    // Open the chat now, while still inside the user gesture — otherwise the popup gets blocked
+    if (orderVia === "whatsapp") {
+      window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(orderText)}`, "_blank");
+    } else {
+      navigator.clipboard
+        .writeText(orderText)
+        .then(() => toast.success("Order details copied — paste them in Telegram."))
+        .catch(() => {});
+      window.open(`https://t.me/${TELEGRAM_USERNAME}`, "_blank");
+    }
+
     try {
       const res = await fetch("/api/orders", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          orderId,
           productId: product.slug,
           productName: product.name,
           size: product.sizes?.[selectedSize]?.label || "Standard",
-          price: product.sizes?.[selectedSize]?.price || product.price || 0,
+          price: currentPrice,
           customerName: form.name,
-          customerEmail: form.email,
+          orderVia,
           shippingAddress: form.address,
           message: form.message,
         }),
@@ -89,8 +121,6 @@ export default function OrderPage() {
     }
   };
 
-  const currentPrice = product.sizes?.[selectedSize]?.price || product.price || 0;
-
   if (orderPlaced) {
     return (
       <motion.div
@@ -104,7 +134,9 @@ export default function OrderPage() {
           <p className="text-gray-300 mb-6">
             Thank you, {form.name}. We&apos;ve received your order for{" "}
             <strong>{product.name} ({product.sizes?.[selectedSize]?.label || "Standard"})</strong>.
-            A confirmation will be sent to <strong>{form.email}</strong>.
+            {orderVia === "whatsapp"
+              ? " We've opened WhatsApp for you — just send the message to confirm your order."
+              : " We've opened Telegram for you — paste the copied order details and send to confirm your order."}
           </p>
           <div className="flex justify-center gap-3">
             <Link
@@ -223,17 +255,32 @@ export default function OrderPage() {
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1.5">Email Address</label>
-                <div className="relative">
-                  <FiMail className="absolute left-3.5 top-3 w-4 h-4 text-gray-500" />
-                  <input
-                    type="email"
-                    placeholder="john@example.com"
-                    required
-                    value={form.email}
-                    onChange={(e) => setForm({ ...form, email: e.target.value })}
-                    className="w-full bg-[#0d0d0d] border border-[#262626] text-white rounded-xl pl-10 pr-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#10b981] focus:border-transparent placeholder:text-gray-600"
-                  />
+                <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1.5">Place Order Via</label>
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setOrderVia("whatsapp")}
+                    className={`flex items-center justify-center gap-2 px-4 py-3 rounded-xl border text-sm font-bold transition-all ${
+                      orderVia === "whatsapp"
+                        ? "bg-[#25D366] text-black border-[#25D366] shadow-md shadow-[#25D366]/20"
+                        : "bg-[#0d0d0d] text-gray-300 border-[#262626] hover:border-[#25D366]/50"
+                    }`}
+                  >
+                    <FaWhatsapp className="w-5 h-5" />
+                    WhatsApp
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setOrderVia("telegram")}
+                    className={`flex items-center justify-center gap-2 px-4 py-3 rounded-xl border text-sm font-bold transition-all ${
+                      orderVia === "telegram"
+                        ? "bg-[#0088cc] text-white border-[#0088cc] shadow-md shadow-[#0088cc]/20"
+                        : "bg-[#0d0d0d] text-gray-300 border-[#262626] hover:border-[#0088cc]/50"
+                    }`}
+                  >
+                    <FaTelegramPlane className="w-5 h-5" />
+                    Telegram
+                  </button>
                 </div>
               </div>
 
@@ -277,11 +324,11 @@ export default function OrderPage() {
               ) : (
                 <FiShoppingBag className="w-5 h-5" />
               )}
-              {submitting ? "Placing Order..." : `Place Order — €${currentPrice.toFixed(2)}`}
+              {submitting ? "Placing Order..." : `Place Order via ${orderVia === "whatsapp" ? "WhatsApp" : "Telegram"} — €${currentPrice.toFixed(2)}`}
             </button>
 
             <p className="text-xs text-gray-500 text-center mt-3">
-              Payment instructions will be sent to your email after order confirmation.
+              You&apos;ll be redirected to {orderVia === "whatsapp" ? "WhatsApp" : "Telegram"} to send your order. Payment details are shared in the chat.
             </p>
           </form>
         </motion.div>
