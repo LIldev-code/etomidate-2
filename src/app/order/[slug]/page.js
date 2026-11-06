@@ -13,7 +13,7 @@ const categoryIcons = {
   liquid: <FaTint className="w-10 h-10 text-[#10b981]" />,
 };
 
-const WHATSAPP_NUMBER = "5125922145";
+const WHATSAPP_NUMBER = "19852913802";
 const TELEGRAM_USERNAME = "biggestsup";
 
 export default function OrderPage() {
